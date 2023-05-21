@@ -52,13 +52,15 @@ import os,time
 os.environ['TF_CPP_MIN_LOG_LEVEL']='2'
 import numpy as np
 import tensorflow as tf
+tf.compat.v1.disable_eager_execution()
+
 from datetime import datetime
 from tqdm import tqdm
 import supportingFunctions as sf
 import model as mm
 
-tf.reset_default_graph()
-config = tf.ConfigProto()
+tf.compat.v1.reset_default_graph()
+config = tf.compat.v1.ConfigProto()
 config.gpu_options.allow_growth=True
 
 #--------------------------------------------------------------
@@ -93,11 +95,11 @@ sessFileName= directory+'/model'
 
 
 #%% save test model
-tf.reset_default_graph()
+tf.compat.v1.reset_default_graph()
 
-csmT = tf.placeholder(tf.complex64,shape=(None,12,256,232),name='csm')
-maskT= tf.placeholder(tf.complex64,shape=(None,256,232),name='mask')
-atbT = tf.placeholder(tf.float32,shape=(None,256,232,2),name='atb')
+csmT = tf.compat.v1.placeholder(tf.complex64,shape=(None,12,256,232),name='csm')
+maskT= tf.compat.v1.placeholder(tf.complex64,shape=(None,256,232),name='mask')
+atbT = tf.compat.v1.placeholder(tf.float32,shape=(None,256,232,2),name='atb')
 
 out=mm.makeModel(atbT,csmT,maskT,False,nLayers,K,gradientMethod)
 predTst=out['dc'+str(K)]
