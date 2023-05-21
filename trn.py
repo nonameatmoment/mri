@@ -116,11 +116,11 @@ trnOrg,trnAtb,trnCsm,trnMask=sf.getData('training')
 trnOrg,trnAtb=sf.c2r(trnOrg),sf.c2r(trnAtb)
 
 #%%
-tf.reset_default_graph()
-csmP = tf.placeholder(tf.complex64,shape=(None,None,None,None),name='csm')
-maskP= tf.placeholder(tf.complex64,shape=(None,None,None),name='mask')
-atbP = tf.placeholder(tf.float32,shape=(None,None,None,2),name='atb')
-orgP = tf.placeholder(tf.float32,shape=(None,None,None,2),name='org')
+tf.compat.v1.reset_default_graph()
+csmP = tf.compat.v1.placeholder(tf.complex64,shape=(None,None,None,None),name='csm')
+maskP= tf.compat.v1.placeholder(tf.complex64,shape=(None,None,None),name='mask')
+atbP = tf.compat.v1.placeholder(tf.float32,shape=(None,None,None,2),name='atb')
+orgP = tf.compat.v1.placeholder(tf.float32,shape=(None,None,None,2),name='org')
 
 
 #%% creating the dataset
@@ -134,7 +134,8 @@ trnData=trnData.repeat(count=epochs)
 trnData = trnData.shuffle(buffer_size=trnOrg.shape[0])
 trnData=trnData.batch(batchSize)
 trnData=trnData.prefetch(5)
-iterator=trnData.make_initializable_iterator()
+# iterator=trnData.make_initializable_iterator()
+iterator = tf.compat.v1.data.make_initializable_iterator(trnData)
 orgT,atbT,csmT,maskT = iterator.get_next('getNext')
 
 #%% make training model
@@ -144,10 +145,10 @@ predT=out['dc'+str(K)]
 predT=tf.identity(predT,name='pred')
 loss = tf.reduce_mean(tf.reduce_sum(tf.pow(predT-orgT, 2),axis=0))
 tf.summary.scalar('loss', loss)
-update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
+update_ops = tf.compat.v1.get_collection(tf.compat.v1.GraphKeys.UPDATE_OPS)
 
 with tf.name_scope('optimizer'):
-    optimizer = tf.train.AdamOptimizer()
+    optimizer = tf.compat.v1.train.AdamOptimizer()
     gvs = optimizer.compute_gradients(loss)
     capped_gvs = [(tf.clip_by_value(grad, -1., 1.), var) for grad, var in gvs]
     opToRun=optimizer.apply_gradients(capped_gvs)
@@ -159,13 +160,13 @@ with tf.name_scope('optimizer'):
 print ('training started at', datetime.now().strftime("%d-%b-%Y %I:%M %P"))
 print ('parameters are: Epochs:',epochs,' BS:',batchSize,'nSteps:',nSteps,'nSamples:',nTrn)
 
-saver = tf.train.Saver(max_to_keep=100)
+saver = tf.compat.v1.train.Saver(max_to_keep=100)
 totalLoss,ep=[],0
-lossT = tf.placeholder(tf.float32)
-lossSumT = tf.summary.scalar("TrnLoss", lossT)
+lossT = tf.compat.v1.placeholder(tf.float32)
+lossSumT = tf.compat.v1.summary.scalar("TrnLoss", lossT)
 
-with tf.Session(config=config) as sess:
-    sess.run(tf.global_variables_initializer())
+with tf.compat.v1.Session(config=config) as sess:
+    sess.run(tf.compat.v1.global_variables_initializer())
     if restoreWeights:
         sess=sf.assignWts(sess,nLayers,wts)
 
@@ -174,7 +175,7 @@ with tf.Session(config=config) as sess:
     savedFile=saver.save(sess, sessFileName)
     print("Model meta graph saved in::%s" % savedFile)
 
-    writer = tf.summary.FileWriter(directory, sess.graph)
+    writer = tf.compat.v1.summary.FileWriter(directory, sess.graph)
     for step in tqdm(range(nSteps)):
         try:
             tmp,_,_=sess.run([loss,update_ops,opToRun])
