@@ -106,9 +106,9 @@ predTst=out['dc'+str(K)]
 predTst=tf.identity(predTst,name='predTst')
 sessFileNameTst=directory+'/modelTst'
 
-saver=tf.train.Saver()
-with tf.Session(config=config) as sess:
-    sess.run(tf.global_variables_initializer())
+saver=tf.compat.v1.train.Saver()
+with tf.compat.v1.Session(config=config) as sess:
+    sess.run(tf.compat.v1.global_variables_initializer())
     savedFile=saver.save(sess, sessFileNameTst,latest_filename='checkpointTst')
 print ('testing model saved:' +savedFile)
 #%% read multi-channel dataset
